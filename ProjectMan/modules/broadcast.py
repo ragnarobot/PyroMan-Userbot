@@ -115,13 +115,21 @@ async def blchatgcast(client: Client, message: Message):
 
 
 @Client.on_message(filters.command("addblacklist", cmd) & filters.me)
-async def addblacklist(client: Client, message: Message):
-    xxnx = await edit_or_reply(message, "`Processing...`")
-    if HAPP is None:
-        return await xxnx.edit(
-            "**Silahkan Tambahkan Var** `HEROKU_APP_NAME` **untuk menambahkan blacklist**",
+async def add(event):
+    xxnx = await eor(event, get_string("com_1"))
+    var = "BLACKLIST_GCAST"
+    gc = event.chat_id
+    if HEROKU_APP_NAME is not None:
+        app = Heroku.app(HEROKU_APP_NAME)
+    else:
+        await eod(
+            xxnx, get_string("addbl_1").format("menambahkan")
         )
-    blgc = f"{BLACKLIST_GCAST} {message.chat.id}"
+        return
+    heroku_Config = app.config()
+    if event is None:
+        return
+    blgc = f"{BLACKLIST_GCAST} {gc}"
     blacklistgrup = (
         blgc.replace("{", "")
         .replace("}", "")
@@ -130,16 +138,9 @@ async def addblacklist(client: Client, message: Message):
         .replace("]", "")
         .replace("set() ", "")
     )
-    await xxnx.edit(
-        f"**Berhasil Menambahkan** `{message.chat.id}` **ke daftar blacklist gcast.**\n\nSedang MeRestart Heroku untuk Menerapkan Perubahan."
+    await xxnx.edit(get_string("addbl_2").format(gc)
     )
-    if await in_heroku():
-        heroku_var = HAPP.config()
-        heroku_var["BLACKLIST_GCAST"] = blacklistgrup
-    else:
-        path = dotenv.find_dotenv("config.env")
-        dotenv.set_key(path, "BLACKLIST_GCAST", blacklistgrup)
-    restart()
+    heroku_Config[var] = blacklistgrup
 
 
 @Client.on_message(filters.command("delblacklist", cmd) & filters.me)
